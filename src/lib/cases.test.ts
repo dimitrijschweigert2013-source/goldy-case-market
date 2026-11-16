@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CASES, RETURN_RATE, rollDrop } from "./cases";
 
-const byId = (id: string) => CASES.find((c) => c.id === id)!;
-
 describe("cases", () => {
   it("has 12 paid cases, cheapest first", () => {
     expect(CASES).toHaveLength(12);
@@ -11,8 +9,9 @@ describe("cases", () => {
   it("there is no free case", () => {
     expect(CASES.every((c) => c.price > 0 && c.id !== "free-case")).toBe(true);
   });
-  it("penny case goes up to Galaxy", () => {
-    expect(byId("penny-case").drops[0]!.skin.id).toBe("galaxy");
+  it("every case lists its most expensive drop first", () => {
+    for (const c of CASES)
+      for (let i = 1; i < c.drops.length; i++) expect(c.drops[i - 1]!.skin.value).toBeGreaterThanOrEqual(c.drops[i]!.skin.value);
   });
   it("chances sum to 1 in every case", () => {
     for (const c of CASES) expect(c.drops.reduce((a, d) => a + d.chance, 0)).toBeCloseTo(1);

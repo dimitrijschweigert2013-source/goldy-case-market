@@ -32,7 +32,8 @@ use the editor.
 <!-- AGENT-MEMORY:BEGIN -->
 - Skin catalog lives in `src/lib/skins.ts`; real wiki images are CDN pointers `src/assets/skins/<id>.webp.asset.json` picked up by `import.meta.glob`, so a new skin needs a row plus a pointer with the same id.
 - Upgrade math (chance, win check, wheel rotation) stays pure in `src/lib/upgrade.ts` with tests beside it; UI only calls it.
-- Cases live in `src/lib/cases.ts` (pure roll/price math, tested); case price derives from the drop pool expected value so return stays at RETURN_RATE. Case pools filter on skin `rank` (rarity), not price, so pools stay stable when market prices change.
-- Skin `value` is Robux at 1 Robux = 1 US cent (`src/lib/money.ts`), taken from StarPets USD prices; money, deposit and promo rules are pure functions with tests beside them.
+- Cases live in `src/lib/cases.ts` (pure roll/price math, tested); case price derives from the drop pool expected value so return stays at RETURN_RATE. Case pools filter on skin `rank` (a frozen price snapshot), not the live `value`, so pools stay stable when market prices change.
+- Robux/currency conversion lives only in `src/lib/money.ts`; skin `value` is taken from StarPets prices in the same currency; money, deposit and promo rules are pure functions with tests beside them.
+- Live crypto prices are fetched client-side from CoinGecko in the deposit dialog (no key needed); the dialog falls back to a "not available" note.
 - Inventory, Robux wallet and redeemed promo codes are per-browser localStorage (no backend yet); deposits credit the wallet directly until a real payment provider is connected.
 <!-- AGENT-MEMORY:END -->

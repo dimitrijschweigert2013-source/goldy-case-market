@@ -44,23 +44,22 @@ const def = (id: string, name: string, tier: Skin["tier"], filter: (s: Skin) => 
   return { id, name, tier, image: caseImg(id), drops, price: casePrice(drops) };
 };
 
-/** Case pools are picked by rarity rank, so they stay stable when market prices move. */
+/** Case pools are picked by rank (a frozen price snapshot), so they stay stable when market prices move. */
 const WINTER = /ice|snow|xmas|ginger|pepper|ever|sweater|winter|bauble|candy|sugar|lugercane|icicle|turkey/;
 const HALLOWEEN = /hallow|pump|bat|vampire|candle|spider|harvester|ghost|blood|corrupt|night|bone|death|logchopper|elderwood/;
 
 /** All paid cases, cheapest first. */
 export const CASES: CaseDef[] = [
-  // Penny Case: everything up to Galaxy.
-  def("penny-case", "Penny Case", "common", (s) => s.rank <= 80),
-  def("bronze-case", "Bronze Case", "uncommon", (s) => s.rank >= 20 && s.rank <= 150),
-  def("starter-case", "Starter Case", "rare", (s) => s.rank <= 400),
+  def("penny-case", "Penny Case", "common", (s) => s.rank <= 30),
+  def("bronze-case", "Bronze Case", "uncommon", (s) => s.rank >= 20 && s.rank <= 80),
+  def("starter-case", "Starter Case", "rare", (s) => s.rank <= 150),
   def("winter-case", "Winter Case", "uncommon", (s) => WINTER.test(s.id) && s.rank <= 3000),
-  def("halloween-case", "Halloween Case", "vintage", (s) => HALLOWEEN.test(s.id) && s.rank >= 100),
-  def("vintage-case", "Vintage Case", "vintage", (s) => s.rank >= 200 && s.rank <= 1200),
-  def("gun-case", "Gun Case", "rare", (s) => s.kind === "Waffe" && s.rank >= 150),
-  def("knife-case", "Knife Case", "godly", (s) => s.kind === "Messer" && s.rank >= 400 && s.rank <= 3000),
+  def("halloween-case", "Halloween Case", "vintage", (s) => HALLOWEEN.test(s.id) && s.rank >= 25),
+  def("vintage-case", "Vintage Case", "vintage", (s) => s.rank >= 50 && s.rank <= 300),
+  def("gun-case", "Gun Case", "rare", (s) => s.kind === "Waffe" && s.rank >= 50),
+  def("knife-case", "Knife Case", "godly", (s) => s.kind === "Messer" && s.rank >= 100 && s.rank <= 3000),
   def("godly-case", "Godly Case", "godly", (s) => s.tier === "godly"),
-  def("chroma-case", "Chroma Case", "chroma", (s) => s.tier === "chroma" || (s.tier === "godly" && s.rank >= 600)),
-  def("unique-case", "Unique Case", "unique", (s) => s.rank >= 1500),
-  def("ancient-case", "Ancient Case", "ancient", (s) => s.rank >= 3000),
+  def("chroma-case", "Chroma Case", "chroma", (s) => s.tier === "chroma" || (s.tier === "godly" && s.rank >= 1000)),
+  def("unique-case", "Unique Case", "unique", (s) => s.rank >= 500),
+  def("ancient-case", "Ancient Case", "ancient", (s) => s.tier === "ancient" || s.tier === "unique"),
 ].sort((a, b) => a.price - b.price);
