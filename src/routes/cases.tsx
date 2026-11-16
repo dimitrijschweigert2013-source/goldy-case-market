@@ -81,11 +81,12 @@ function CaseOpener({ c, onBack }: { c: CaseDef; onBack: () => void }) {
       return;
     }
     sfx.open();
+    // Decide and save the drop first, so a refresh mid-animation keeps it in the inventory.
     const prize = rollDrop(c.drops, Math.random());
+    inv.add(prize.id);
     setWon(null);
     await spin(prize);
     setWon(prize);
-    inv.add(prize.id);
     sfx.win();
     notifySkin("win", t("cases.unboxed"), prize);
   };

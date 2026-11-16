@@ -73,7 +73,7 @@ function UpgraderPage() {
   const shownStake = spinning ? spinStake : selectedSkins;
   const shownStakeValue = shownStake.reduce((sum, s) => sum + s.value, 0);
   const visibleItems = inv.items.filter((i) => !hidden.includes(i.uid));
-  const totalValue = inv.items.reduce((s, i) => s + (SKIN_BY_ID[i.skinId]?.value ?? 0), 0);
+  const totalValue = visibleItems.reduce((s, i) => s + (SKIN_BY_ID[i.skinId]?.value ?? 0), 0);
 
   const target = targetId ? SKIN_BY_ID[targetId] : undefined;
   const validTarget = target && isTargetAllowed(stakeValue, target.value) ? target : undefined;
