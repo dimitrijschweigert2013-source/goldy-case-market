@@ -33,13 +33,13 @@ export function DepositDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         <Tabs defaultValue="crypto">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="crypto" className="gap-1.5">
-              <Bitcoin className="h-4 w-4" /> {t("dep.tabCrypto")}
+              <Bitcoin className="h-4 w-4 shrink-0" /> {t("dep.tabCrypto")}
             </TabsTrigger>
             <TabsTrigger value="skins" className="gap-1.5">
-              <Sword className="h-4 w-4" /> {t("dep.tabSkins")}
+              <Sword className="h-4 w-4 shrink-0" /> {t("dep.tabSkins")}
             </TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5">
-              <Gift className="h-4 w-4" /> {t("dep.tabPromo")}
+              <Gift className="h-4 w-4 shrink-0" /> {t("dep.tabPromo")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="crypto">
