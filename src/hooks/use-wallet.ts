@@ -1,7 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-const KEY = "mysterydrop-robux-v1";
-export const START_BALANCE = 2000;
+const KEY = "mysterydrop-robux-v2";
+/** New players start empty and add balance via deposit or promo code. */
+export const START_BALANCE = 0;
 const listeners = new Set<() => void>();
 
 function read(): number {
@@ -14,7 +15,7 @@ function write(n: number) {
   listeners.forEach((l) => l());
 }
 
-/** Shared Robux balance (per browser, just for fun). */
+/** Shared Robux balance (per browser). */
 export function useWallet() {
   const balance = useSyncExternalStore(
     (l) => {

@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { FREE_POOL, STARTER_SKINS } from "@/lib/skins";
+import { STARTER_SKINS } from "@/lib/skins";
 
 export type InvItem = { uid: string; skinId: string };
 
@@ -66,13 +66,7 @@ export function useInventory() {
     return id;
   }, []);
 
-  const claimFree = useCallback(() => {
-    const skinId = FREE_POOL[Math.floor(Math.random() * FREE_POOL.length)] ?? "default-knife";
-    write([{ uid: uid(), skinId }, ...read()]);
-    return skinId;
-  }, []);
-
   const reset = useCallback(() => write(starter()), []);
 
-  return { items, ready, add, remove, claimFree, reset };
+  return { items, ready, add, remove, reset };
 }
