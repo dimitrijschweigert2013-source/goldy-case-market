@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+<!-- AGENT-MEMORY:BEGIN -->
+- Skin catalog lives in `src/lib/skins.ts`; real wiki images are CDN pointers `src/assets/skins/<id>.webp.asset.json` picked up by `import.meta.glob`, so a new skin needs a row plus a pointer with the same id.
+- Upgrade math (chance, win check, wheel rotation) stays pure in `src/lib/upgrade.ts` with tests beside it; UI only calls it.
+- Cases live in `src/lib/cases.ts` (pure roll/price math, tested); case price derives from the drop pool expected value so return stays at RETURN_RATE.
+- Inventory and Robux wallet are per-browser localStorage (no backend) — it's a just-for-fun simulator.
+<!-- AGENT-MEMORY:END -->
