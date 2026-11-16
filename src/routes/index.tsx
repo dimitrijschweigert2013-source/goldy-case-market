@@ -32,12 +32,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Stake your MM2 knives and guns, pick a target and let the pointer decide. Godlies, Chromas and Ancients – just for fun.",
+          "Stake your MM2 knives and guns, pick a target and let the pointer decide. Godlies, Chromas and Ancients.",
       },
       { property: "og:title", content: "MysteryDrop – MM2 Skin Upgrader" },
       {
         property: "og:description",
-        content: "Stake your MM2 skins and let the pointer decide – just for fun.",
+        content: "Stake your MM2 skins, pick a target and let the pointer decide.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -286,7 +286,7 @@ function UpgraderPage() {
                 <Backpack className="h-4 w-4 text-gold" /> {t("up.inventory")}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {visibleItems.length} Skins · <Robux className="inline h-3 w-3" /> {fmt(totalValue)}
+                {visibleItems.length} {t("common.skins")} · <Robux className="inline h-3 w-3" /> {fmt(totalValue)}
               </p>
             </div>
           </div>
@@ -367,10 +367,6 @@ function UpgraderPage() {
           </div>
         </div>
       </section>
-
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        {t("up.footer")}
-      </p>
     </main>
   );
 }

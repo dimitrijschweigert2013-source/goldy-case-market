@@ -50,7 +50,7 @@ function subscribe(l: () => void) {
   };
 }
 
-/** Shared inventory for every page (per browser, just for fun). */
+/** Shared inventory for every page (per browser). */
 export function useInventory() {
   const items = useSyncExternalStore(subscribe, read, () => EMPTY);
   const ready = useSyncExternalStore(subscribe, () => true, () => false);

@@ -64,7 +64,7 @@ const ROWS: Row[] = [
   ["icicles", "Icicles", "rare", "Messer", 6, 7],
   ["rainbow", "Rainbow", "rare", "Messer", 7, 7],
   ["rainbow-gun", "Rainbow Gun", "rare", "Waffe", 7, 7],
-  ["galaxy", "Galaxy", "rare", "Messer", 8, 7],
+  ["galaxy", "Galaxy", "rare", "Messer", 8, 8],
   ["splitter", "Splitter", "vintage", "Messer", 11, 11],
   ["blood", "Blood", "vintage", "Messer", 12, 12],
   ["ghost", "Ghost", "vintage", "Messer", 12, 12],

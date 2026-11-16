@@ -16,3 +16,18 @@ export function Pointer({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/** Small triangle marker for the case reel; `dir="down"` sits on top, `dir="up"` at the bottom. */
+export function ReelMarker({ dir, className }: { dir: "down" | "up"; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 16" className={cn("drop-shadow-[0_0_6px_var(--pointer)]", className)} aria-hidden="true">
+      <polygon
+        points={dir === "down" ? "2,2 22,2 12,14" : "2,14 22,14 12,2"}
+        fill="var(--pointer)"
+        stroke="var(--outline-ink)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

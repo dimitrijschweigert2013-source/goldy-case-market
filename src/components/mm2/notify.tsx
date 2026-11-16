@@ -18,12 +18,6 @@ export function notifySkin(kind: Kind, title: string, skin?: Skin) {
           kind === "lose" && "border-lose/60",
         )}
       >
-        <div
-          className={cn(
-            "absolute inset-y-0 left-0 w-1",
-            kind === "win" ? "bg-win" : kind === "lose" ? "bg-lose" : "bg-pointer",
-          )}
-        />
         {skin && (
           <div className="skin-glow flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-surface">
             <img src={skin.image} alt={skin.name} className={cn("h-12 w-12 object-contain", kind === "lose" && "opacity-50 grayscale")} />

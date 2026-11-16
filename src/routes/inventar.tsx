@@ -9,14 +9,16 @@ import { useWallet } from "@/hooks/use-wallet";
 import { sellPrice } from "@/lib/sell";
 import { sfx } from "@/lib/sound";
 import { SKIN_BY_ID, type Skin } from "@/lib/skins";
+import { useLang } from "@/lib/i18n";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/inventar")({
   head: () => ({
     meta: [
-      { title: "Mein Inventar | MysteryDrop" },
-      { name: "description", content: "Alle deine gezogenen MM2 Skins – verkaufe sie für Robux." },
-      { property: "og:title", content: "Mein Inventar | MysteryDrop" },
-      { property: "og:description", content: "Deine MM2 Skins, das teuerste zuerst – verkaufe sie für Robux." },
+      { title: "My Inventory | MysteryDrop" },
+      { name: "description", content: "All the MM2 skins you unboxed – sell them for Robux." },
+      { property: "og:title", content: "My Inventory | MysteryDrop" },
+      { property: "og:description", content: "Your MM2 skins, most valuable first – sell them for Robux." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -24,9 +26,8 @@ export const Route = createFileRoute("/inventar")({
   component: InventoryPage,
 });
 
-const fmt = (n: number) => n.toLocaleString("de-DE");
-
 function InventoryPage() {
+  const { t, fmt } = useLang();
   const inv = useInventory();
   const wallet = useWallet();
   const [selected, setSelected] = useState<string[]>([]);
@@ -50,6 +51,7 @@ function InventoryPage() {
     wallet.earn(amount);
     setSelected([]);
     sfx.win();
+    toast.success(`${t("inv.sold")} +${fmt(amount)} Robux`);
   };
 
   return (
@@ -57,31 +59,31 @@ function InventoryPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 font-display text-3xl">
-            <Backpack className="h-7 w-7 text-gold" /> Inventar
+            <Backpack className="h-7 w-7 text-gold" /> {t("inv.title")}
           </h1>
           <p className="mt-2 flex items-center gap-1 text-muted-foreground">
-            {list.length} Skins · <Robux className="h-4 w-4" /> {fmt(total)}
+            {list.length} {t("common.skins")} · <Robux className="h-4 w-4" /> {fmt(total)}
           </p>
         </div>
         {list.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             {selected.length > 0 ? (
               <Button variant="chip" onClick={() => setSelected([])}>
-                <X /> Abwählen
+                <X /> {t("inv.deselect")}
               </Button>
             ) : (
               <Button variant="chip" onClick={() => setSelected(list.map((x) => x.uid))}>
-                <CheckSquare /> Alle auswählen
+                <CheckSquare /> {t("inv.selectAll")}
               </Button>
             )}
             <Button variant="gold" disabled={!picked.length} onClick={() => sell(picked)}>
               <Coins />
               {picked.length ? (
                 <>
-                  {picked.length} verkaufen für <Robux className="h-4 w-4" /> {fmt(pickedValue)}
+                  {t("inv.sellFor", { n: picked.length })} <Robux className="h-4 w-4" /> {fmt(pickedValue)}
                 </>
               ) : (
-                "Skins auswählen zum Verkaufen"
+                t("inv.pickToSell")
               )}
             </Button>
           </div>
@@ -90,11 +92,11 @@ function InventoryPage() {
 
       {inv.ready && list.length === 0 ? (
         <div className="mt-6 rounded-md border border-dashed border-border p-10 text-center text-muted-foreground">
-          Noch leer – öffne ein Case.
+          {t("inv.empty")}
         </div>
       ) : (
         <>
-          <p className="mt-4 text-xs text-muted-foreground">Tippe auf Skins, um sie auszuwählen.</p>
+          <p className="mt-4 text-xs text-muted-foreground">{t("inv.tapHint")}</p>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             {list.map((x) => (
               <SkinCard
