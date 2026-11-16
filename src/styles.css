@@ -224,8 +224,16 @@
   background: var(--card);
 }
 @utility scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-width: none;
+}
+
+/* Hide native scrollbars without disabling wheel, touch, or keyboard scrolling. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes pop-in {
