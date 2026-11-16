@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import { redeemPromo } from "./promo";
 
 describe("promo codes", () => {
-  it("a known code gives its Robux, case-insensitive", () => {
-    expect(redeemPromo(" welcome ", [])).toEqual({ ok: true, code: "WELCOME", amount: 100 });
+  it("HAPPYNEWYEAR gives 100 Robux, case-insensitive", () => {
+    expect(redeemPromo(" happynewyear ", [])).toEqual({ ok: true, code: "HAPPYNEWYEAR", amount: 100 });
   });
   it("a code works only once", () => {
-    expect(redeemPromo("WELCOME", ["WELCOME"])).toEqual({ ok: false, reason: "used" });
+    expect(redeemPromo("HAPPYNEWYEAR", ["HAPPYNEWYEAR"])).toEqual({ ok: false, reason: "used" });
+  });
+  it("the old placeholder codes are gone", () => {
+    expect(redeemPromo("WELCOME", [])).toEqual({ ok: false, reason: "unknown" });
   });
   it("an unknown code gives nothing", () => {
     expect(redeemPromo("NOPE", [])).toEqual({ ok: false, reason: "unknown" });

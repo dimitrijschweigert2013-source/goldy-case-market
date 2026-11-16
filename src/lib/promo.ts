@@ -1,8 +1,6 @@
 /** Promo codes and the Robux each one gives. Each code works once per player. */
 export const PROMO_CODES: Record<string, number> = {
-  WELCOME: 100,
-  FOXY: 250,
-  MYSTERY: 500,
+  HAPPYNEWYEAR: 100,
 };
 
 export type PromoResult = { ok: true; code: string; amount: number } | { ok: false; reason: "unknown" | "used" };

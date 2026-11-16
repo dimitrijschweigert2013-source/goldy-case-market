@@ -10,5 +10,5 @@
 - [x] 1 Robux = 1 cent, StarPets prices
 - [x] Case images share Godly chest shape
 - [x] Orange/yellow colors, fox mascot logo
-- [ ] Real payments (crypto provider) — waiting on user's answer
-- [ ] Real promo code list — waiting on user's answer
+- [ ] Real-money payments — blocked: needs gambling licence, licensed crypto processor and age checks from the user
+- [x] Promo code HAPPYNEWYEAR (amount waiting on user's answer, 100 for now)
