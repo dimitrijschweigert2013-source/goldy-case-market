@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CASES, RETURN_RATE, rollDrop } from "./cases";
+import { CASES, PRICE_MARKUP, RETURN_RATE, casePrice, rollDrop } from "./cases";
 
 describe("cases", () => {
   it("has 12 paid cases, cheapest first", () => {
@@ -21,6 +21,18 @@ describe("cases", () => {
       const ev = c.drops.reduce((a, d) => a + d.skin.value * d.chance, 0);
       expect(ev / c.price).toBeLessThanOrEqual(RETURN_RATE);
     }
+  });
+  it("every case costs 20% more than its base price", () => {
+    expect(PRICE_MARKUP).toBe(1.2);
+    for (const c of CASES) {
+      const ev = c.drops.reduce((a, d) => a + d.skin.value * d.chance, 0);
+      expect(c.price).toBeGreaterThanOrEqual((ev / RETURN_RATE) * 1.2);
+      expect(c.price).toBeLessThan((ev / RETURN_RATE) * 1.2 + 5);
+    }
+  });
+  it("a pool worth 90 on average costs 120 instead of 100", () => {
+    const skin = CASES[0]!.drops[0]!.skin;
+    expect(casePrice([{ skin: { ...skin, value: 90 }, chance: 1 }])).toBe(120);
   });
   it("roll 0 gives the most expensive, roll near 1 the cheapest", () => {
     const c = CASES[0]!;

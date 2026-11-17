@@ -13,8 +13,10 @@ export type CaseDef = {
 const images = import.meta.glob<string>("../assets/cases/*.webp", { eager: true, import: "default" });
 const caseImg = (id: string) => images[`../assets/cases/${id}.webp`] ?? "";
 
-/** The house keeps this share: price = expected value / RETURN_RATE. */
+/** The house keeps this share: base price = expected value / RETURN_RATE. */
 export const RETURN_RATE = 0.9;
+/** Every case costs this much more than its base price (+20%). */
+export const PRICE_MARKUP = 1.2;
 
 export function buildDrops(pool: Skin[]) {
   const weights = pool.map((s) => 1 / Math.pow(s.value, 1.3));
@@ -26,7 +28,7 @@ export function buildDrops(pool: Skin[]) {
 
 export function casePrice(drops: { skin: Skin; chance: number }[]) {
   const ev = drops.reduce((sum, d) => sum + d.skin.value * d.chance, 0);
-  return Math.ceil(ev / RETURN_RATE / 5) * 5;
+  return Math.ceil((ev / RETURN_RATE) * PRICE_MARKUP / 5) * 5;
 }
 
 /** Picks a drop for a roll in [0, 1). */

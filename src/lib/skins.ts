@@ -42,12 +42,9 @@ export const TIER_ORDER: Tier[] = [
   "ancient",
 ];
 
-// Real item pictures (from the MM2 wiki), hosted as CDN assets.
-const images = import.meta.glob<{ url: string }>("../assets/skins/*.webp.asset.json", {
-  eager: true,
-  import: "default",
-});
-const img = (id: string) => images[`../assets/skins/${id}.webp.asset.json`]?.url ?? "";
+// Real item pictures (from the MM2 wiki), bundled with the app so they work on any host (Lovable, Vercel, ...).
+const images = import.meta.glob<string>("../assets/skins/*.webp", { eager: true, import: "default" });
+const img = (id: string) => images[`../assets/skins/${id}.webp`] ?? "";
 
 /**
  * Each row: rank (frozen price snapshot, picks case pools) and price in Robux.
