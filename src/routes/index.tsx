@@ -334,7 +334,7 @@ function ItemSlot({
   label: string;
   skin: Skin | undefined;
   empty: string;
-  onClear?: () => void;
+  onClear?: (() => void) | undefined;
   clearLabel: string;
   className?: string;
 }) {
