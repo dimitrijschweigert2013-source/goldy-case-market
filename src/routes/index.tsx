@@ -1,29 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { sfx } from "@/lib/sound";
-import { notifySkin } from "@/components/mm2/notify";
-import {
-  ArrowDownWideNarrow,
-  ArrowUpWideNarrow,
-  Backpack,
-  Percent,
-  Search,
-  Target,
-  Trash2,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { ArrowDownWideNarrow, ArrowUpWideNarrow, Backpack, Search, Target, X, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkinCard } from "@/components/mm2/SkinCard";
 import { UpgradeWheel } from "@/components/mm2/UpgradeWheel";
+import { Robux } from "@/components/mm2/Robux";
+import { notifySkin } from "@/components/mm2/notify";
 import { useInventory } from "@/hooks/use-inventory";
+import { logHistory } from "@/hooks/use-history";
 import { SKINS, SKIN_BY_ID, TIER_LABEL, type Skin } from "@/lib/skins";
-import { isTargetAllowed, isWin, landingSpot, nextRotation, realChance, upgradeChance } from "@/lib/upgrade";
+import {
+  QUICK_CHANCES,
+  QUICK_MULTIPLIERS,
+  isTargetAllowed,
+  isWin,
+  landingSpot,
+  nextRotation,
+  pickTarget,
+  realChance,
+  upgradeChance,
+} from "@/lib/upgrade";
+import { sfx } from "@/lib/sound";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { Robux } from "@/components/mm2/Robux";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,14 +48,13 @@ export const Route = createFileRoute("/")({
 });
 
 const SPIN_MS = 7000;
-const MULTIPLIERS = [1.5, 2, 3, 5, 10];
 
 function UpgraderPage() {
   const inv = useInventory();
   const { t, fmt } = useLang();
-  const [spinStake, setSpinStake] = useState<Skin[]>([]);
+  const [spinStake, setSpinStake] = useState<Skin | null>(null);
   const [hidden, setHidden] = useState<string[]>([]);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -64,14 +64,11 @@ function UpgraderPage() {
   const [sortDesc, setSortDesc] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const selectedSkins = inv.items
-    .filter((i) => selected.includes(i.uid))
-    .map((i) => SKIN_BY_ID[i.skinId])
-    .filter((s): s is Skin => Boolean(s));
-  const stakeValue = selectedSkins.reduce((sum, s) => sum + s.value, 0);
+  const selectedItem = selected ? inv.items.find((i) => i.uid === selected) : undefined;
+  const selectedSkin = selectedItem ? SKIN_BY_ID[selectedItem.skinId] : undefined;
+  const stakeValue = selectedSkin?.value ?? 0;
   // While spinning the stake is already gone from the inventory, so show the snapshot.
-  const shownStake = spinning ? spinStake : selectedSkins;
-  const shownStakeValue = shownStake.reduce((sum, s) => sum + s.value, 0);
+  const shownStake = spinning ? spinStake ?? undefined : selectedSkin;
   const visibleItems = inv.items.filter((i) => !hidden.includes(i.uid));
   const totalValue = visibleItems.reduce((s, i) => s + (SKIN_BY_ID[i.skinId]?.value ?? 0), 0);
 
@@ -88,22 +85,20 @@ function UpgraderPage() {
 
   const reset = () => setResult(null);
 
+  /** Only one skin can be staked: picking another one swaps it. */
   const toggle = (uid: string) => {
     if (spinning) return;
     reset();
-    setSelected((prev) => (prev.includes(uid) ? prev.filter((u) => u !== uid) : [...prev, uid]));
+    sfx.click();
+    setSelected((prev) => (prev === uid ? null : uid));
   };
 
-  const pickMultiplier = (m: number) => {
+  const quickPick = (want: { multiplier: number } | { chance: number }) => {
     if (!stakeValue || spinning) return;
-    const goal = stakeValue * m;
-    let best: Skin | null = null;
-    for (const s of SKINS) {
-      if (!isTargetAllowed(stakeValue, s.value)) continue;
-      if (!best || Math.abs(s.value - goal) < Math.abs(best.value - goal)) best = s;
-    }
+    const best = pickTarget(stakeValue, SKINS, want);
     if (best) {
       reset();
+      sfx.click();
       setTargetId(best.id);
     }
   };
@@ -113,25 +108,27 @@ function UpgraderPage() {
   }, []);
 
   const spin = () => {
-    if (!validTarget || spinning || !selected.length) return;
+    if (!validTarget || spinning || !selected || !selectedSkin) return;
     // The real odds are lower than the shown chance; the pointer then lands to match.
     const won = isWin(Math.random(), realChance(chance));
     const spot = landingSpot(won, chance, Math.random());
     const prize = validTarget;
     // Save the outcome first, then play the animation, so leaving the page can't lose or dupe skins.
-    setSpinStake(selectedSkins);
-    inv.remove(selected);
-    setSelected([]);
+    setSpinStake(selectedSkin);
+    inv.remove([selected]);
+    setSelected(null);
     const newUid = won ? inv.add(prize.id) : null;
+    logHistory({ kind: "upgrade", stake: [selectedSkin.id], targetId: prize.id, chance, won });
     setHidden(newUid ? [newUid] : []);
     reset();
     setLastChance(chance);
     setSpinning(true);
+    sfx.open();
     setRotation((prev) => nextRotation(prev, spot));
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       setSpinning(false);
-      setSpinStake([]);
+      setSpinStake(null);
       setHidden([]);
       if (won) {
         setResult("win");
@@ -145,141 +142,92 @@ function UpgraderPage() {
     }, SPIN_MS + 150);
   };
 
-
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6">
+    <main className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6">
       {/* Upgrade stage */}
-      <section className="panel grid gap-4 p-4 md:grid-cols-[1fr_auto_1fr] md:items-center md:p-6">
-        {/* Stake */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Backpack className="h-3.5 w-3.5" /> {t("up.stake")}
-            </span>
-            {selected.length > 0 && !spinning && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelected([]);
-                  reset();
-                }}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <Trash2 className="h-3 w-3" /> {t("up.clear")}
-              </button>
-            )}
-          </div>
-          <div className="mx-auto aspect-square w-full max-w-[260px] rounded-lg border border-border bg-surface p-2 shadow-inner">
-            <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-1.5">
-              {Array.from({ length: 9 }).map((_, i) => {
-                const overflow = shownStake.length > 9 && i === 8;
-                const s = overflow ? undefined : shownStake[i];
-                if (overflow) {
-                  return (
-                    <div key={i} className="grid place-items-center rounded-md bg-secondary font-display text-sm font-semibold">
-                      +{shownStake.length - 8}
-                    </div>
-                  );
-                }
-                return s ? (
-                  <div
-                    key={i}
-                    data-tier={s.tier}
-                    title={s.name}
-                    className="skin-glow grid place-items-center rounded-md border border-border/60"
-                  >
-                    <img src={s.image} alt={s.name} className="h-[80%] w-[80%] object-contain" />
-                  </div>
-                ) : (
-                  <div key={i} className="rounded-md border border-dashed border-border/70 bg-background/40" />
-                );
-              })}
-            </div>
-          </div>
-          {shownStake.length === 0 && (
-            <span className="-mt-1 text-center text-xs text-muted-foreground">{t("up.pickSkins")}</span>
-          )}
-          <Stat icon={<Robux className="h-3.5 w-3.5" />} label={t("up.value")} value={fmt(shownStakeValue)} />
-        </div>
+      <section className="stage grid grid-cols-2 gap-3 p-3 sm:gap-4 sm:p-5 md:grid-cols-[1fr_minmax(0,340px)_1fr] md:items-center md:p-6">
+        <ItemSlot
+          className="order-1"
+          icon={<Backpack className="h-3.5 w-3.5" />}
+          label={t("up.stake")}
+          skin={shownStake}
+          empty={t("up.pickSkins")}
+          onClear={selected && !spinning ? () => (setSelected(null), reset()) : undefined}
+          clearLabel={t("up.clear")}
+        />
 
         {/* Wheel */}
-        <div className="flex w-full flex-col items-center gap-4 md:w-[340px]">
-          <UpgradeWheel
-            chance={spinning || result ? lastChance : chance}
-            rotation={rotation}
-            spinning={spinning}
-            target={target}
-            result={result}
-            spinMs={SPIN_MS}
-          />
-          <div className="flex flex-wrap justify-center gap-1.5">
-            {MULTIPLIERS.map((m) => (
+        <div className="order-3 col-span-2 flex w-full flex-col items-center gap-3 md:order-2 md:col-span-1">
+          <div className="w-full max-w-[300px] md:max-w-[340px]">
+            <UpgradeWheel
+              chance={spinning || result ? lastChance : chance}
+              rotation={rotation}
+              spinning={spinning}
+              target={target}
+              result={result}
+              spinMs={SPIN_MS}
+            />
+          </div>
+          <div className="grid w-full max-w-[340px] grid-cols-6 gap-1.5">
+            {QUICK_MULTIPLIERS.map((m) => (
               <Button
-                key={m}
+                key={`x${m}`}
                 size="sm"
                 variant="chip"
-                className="h-7 px-2.5 font-display tabular-nums"
+                className="h-8 px-0 font-display tabular-nums"
                 disabled={!stakeValue || spinning}
-                onClick={() => pickMultiplier(m)}
+                onClick={() => quickPick({ multiplier: m })}
               >
                 x{m}
+              </Button>
+            ))}
+            {QUICK_CHANCES.map((c) => (
+              <Button
+                key={`p${c}`}
+                size="sm"
+                variant="chip"
+                className="h-8 px-0 font-display tabular-nums"
+                disabled={!stakeValue || spinning}
+                onClick={() => quickPick({ chance: c })}
+              >
+                {Math.round(c * 100)}%
               </Button>
             ))}
           </div>
           <Button
             variant="gold"
             size="xl"
-            className="w-full"
-            disabled={!validTarget || !selected.length || spinning}
+            className="w-full max-w-[340px]"
+            disabled={!validTarget || !selected || spinning}
             onClick={spin}
           >
             <Zap /> {spinning ? t("up.spinning") : t("up.upgrade")}
+            {validTarget && !spinning && (
+              <span className="ml-1 rounded bg-background/25 px-1.5 py-0.5 text-xs tabular-nums">
+                x{multiplier.toFixed(2)}
+              </span>
+            )}
           </Button>
         </div>
 
-        {/* Target */}
-        <div className="flex flex-col gap-3">
-          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Target className="h-3.5 w-3.5" /> {t("up.target")}
-          </span>
-          <div className="mx-auto aspect-square w-full max-w-[260px] rounded-lg border border-border bg-surface p-2 shadow-inner">
-            <div
-              data-tier={target?.tier}
-              className={cn(
-                "flex h-full w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/70 bg-background/40 p-3 text-center",
-                target && "skin-glow border-solid border-border/60",
-              )}
-            >
-              {target ? (
-                <>
-                  <img src={target.image} alt={target.name} className="h-[62%] w-[62%] object-contain drop-shadow-[0_8px_12px_rgb(0_0_0/0.5)]" />
-                  <div className="tier-text text-[10px] font-semibold uppercase tracking-wider">
-                    {TIER_LABEL[target.tier]}
-                  </div>
-                  <div className="font-display text-lg font-semibold leading-tight">{target.name}</div>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">{t("up.pickTarget")}</span>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Stat icon={<Robux className="h-3.5 w-3.5" />} label={t("up.value")} value={target ? fmt(target.value) : "–"} />
-            <Stat icon={<Percent className="h-3.5 w-3.5" />} label={t("up.chance")} value={validTarget ? `${(chance * 100).toFixed(1)}%` : "–"} />
-            <Stat icon={<TrendingUp className="h-3.5 w-3.5" />} label={t("up.multi")} value={validTarget ? `x${multiplier.toFixed(2)}` : "–"} />
-          </div>
-        </div>
+        <ItemSlot
+          className="order-2 md:order-3"
+          icon={<Target className="h-3.5 w-3.5" />}
+          label={t("up.target")}
+          skin={target}
+          empty={t("up.pickTarget")}
+          onClear={target && !spinning ? () => (setTargetId(null), reset()) : undefined}
+          clearLabel={t("up.clear")}
+        />
       </section>
 
       {target && !validTarget && stakeValue > 0 && !spinning && (
-        <p className="mt-3 text-center text-sm text-lose">
-          {t("up.targetTooLow")}
-        </p>
+        <p className="mt-3 text-center text-sm text-lose">{t("up.targetTooLow")}</p>
       )}
 
       {/* Lists */}
-      <section className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="panel p-4">
+      <section className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
+        <div className="panel p-3 sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
               <h2 className="flex items-center gap-2 text-base">
@@ -295,28 +243,28 @@ function UpgraderPage() {
               {t("up.invEmpty")}
             </div>
           ) : (
-            <div className="scrollbar-thin grid max-h-[560px] grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
+            <div className="scrollbar-thin grid max-h-[560px] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
               {[...visibleItems]
                 .sort((a, b) => (SKIN_BY_ID[b.skinId]?.value ?? 0) - (SKIN_BY_ID[a.skinId]?.value ?? 0))
                 .map((item) => {
-                const skin = SKIN_BY_ID[item.skinId];
-                if (!skin) return null;
-                return (
-                  <SkinCard
-                    key={item.uid}
-                    skin={skin}
-                    active={selected.includes(item.uid)}
-                    disabled={spinning}
-                    onClick={() => toggle(item.uid)}
-                  />
-                );
-              })}
+                  const skin = SKIN_BY_ID[item.skinId];
+                  if (!skin) return null;
+                  return (
+                    <SkinCard
+                      key={item.uid}
+                      skin={skin}
+                      active={selected === item.uid}
+                      disabled={spinning}
+                      onClick={() => toggle(item.uid)}
+                    />
+                  );
+                })}
             </div>
           )}
         </div>
 
-        <div className="panel p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="panel p-3 sm:p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-base">
               <Target className="h-4 w-4 text-gold" /> {t("up.chooseTarget")}
             </h2>
@@ -327,7 +275,7 @@ function UpgraderPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("up.search")}
-                  className="h-8 pl-8 text-sm"
+                  className="h-8 pl-8"
                 />
               </div>
               <Button
@@ -341,7 +289,7 @@ function UpgraderPage() {
               </Button>
             </div>
           </div>
-          <div className="scrollbar-thin grid max-h-[560px] grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
+          <div className="scrollbar-thin grid max-h-[560px] grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
             {targets.map((skin) => {
               const allowed = stakeValue > 0 && isTargetAllowed(stakeValue, skin.value);
               return (
@@ -352,6 +300,7 @@ function UpgraderPage() {
                   disabled={!allowed || spinning}
                   onClick={() => {
                     reset();
+                    sfx.click();
                     setTargetId(skin.id);
                   }}
                   badge={
@@ -371,13 +320,68 @@ function UpgraderPage() {
   );
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+/** Big skin display for the stake or the target: picture, then name and value right under it. */
+function ItemSlot({
+  icon,
+  label,
+  skin,
+  empty,
+  onClear,
+  clearLabel,
+  className,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  skin: Skin | undefined;
+  empty: string;
+  onClear?: () => void;
+  clearLabel: string;
+  className?: string;
+}) {
+  const { fmt } = useLang();
   return (
-    <div className="rounded-md border border-border bg-surface px-3 py-2">
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {icon} {label}
+    <div className={cn("flex min-w-0 flex-col items-center gap-2", className)}>
+      <div className="flex w-full items-center justify-between">
+        <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {icon} {label}
+        </span>
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label={clearLabel}
+            className="grid h-6 w-6 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
-      <div className="font-display text-base font-semibold tabular-nums text-foreground">{value}</div>
+      <div
+        data-tier={skin?.tier}
+        className={cn("slot relative grid aspect-square w-full max-w-[240px] place-items-center", skin && "slot-filled")}
+      >
+        {skin ? (
+          <img
+            key={skin.id}
+            src={skin.image}
+            alt={skin.name}
+            className="animate-pop-in h-[72%] w-[72%] -rotate-12 object-contain drop-shadow-[0_10px_14px_rgb(0_0_0/0.55)]"
+          />
+        ) : (
+          <span className="px-4 text-center text-xs text-muted-foreground">{empty}</span>
+        )}
+      </div>
+      <div data-tier={skin?.tier} className="flex min-h-[54px] w-full flex-col items-center text-center">
+        {skin && (
+          <>
+            <span className="tier-text text-[10px] font-semibold uppercase tracking-wider">{TIER_LABEL[skin.tier]}</span>
+            <span className="w-full truncate font-display text-sm font-semibold leading-tight sm:text-base">{skin.name}</span>
+            <span className="mt-0.5 flex items-center gap-1 font-display text-sm font-semibold tabular-nums text-gold">
+              <Robux className="h-3.5 w-3.5" /> {fmt(skin.value)}
+            </span>
+          </>
+        )}
+      </div>
     </div>
   );
 }

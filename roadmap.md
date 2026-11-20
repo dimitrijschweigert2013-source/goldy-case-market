@@ -15,3 +15,12 @@
 - [x] Crypto: BTC + LTC only, live price, shows how much to send
 - [x] 1 Robux = 1 euro cent, StarPets EUR prices 1:1
 - [ ] Live skin prices (auto-updating) — not done; prices are today's StarPets snapshot
+- [ ] Case prices +20%
+- [ ] Themed case designs (webs, snow, ...) for every case + new fox-with-chest logo
+- [ ] Case skins not cut off, tilted ~20°
+- [ ] History page (case drops, upgrades, sales, deposits, promo)
+- [ ] Skin pictures work on Vercel (bundled files)
+- [ ] Upgrader: one skin for one target, value under name, x2/x4/x8 and 35/55/75% buttons
+- [ ] Better, less "AI" sounds
+- [ ] Overall design closer to case sites (Hellcase/SkinBro/upgrader style)
+- [ ] Phone: no zoomed-out page, logo not squashed

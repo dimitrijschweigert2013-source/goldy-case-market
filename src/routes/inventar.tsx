@@ -6,6 +6,7 @@ import { Robux } from "@/components/mm2/Robux";
 import { SkinCard } from "@/components/mm2/SkinCard";
 import { useInventory } from "@/hooks/use-inventory";
 import { useWallet } from "@/hooks/use-wallet";
+import { logHistory } from "@/hooks/use-history";
 import { sellPrice } from "@/lib/sell";
 import { sfx } from "@/lib/sound";
 import { SKIN_BY_ID, type Skin } from "@/lib/skins";
@@ -49,8 +50,9 @@ function InventoryPage() {
     const amount = sellPrice(items.map((x) => x.skin.id));
     inv.remove(items.map((x) => x.uid));
     wallet.earn(amount);
+    logHistory({ kind: "sell", skinIds: items.map((x) => x.skin.id), amount });
     setSelected([]);
-    sfx.win();
+    sfx.coin();
     toast.success(`${t("inv.sold")} +${fmt(amount)} Robux`);
   };
 

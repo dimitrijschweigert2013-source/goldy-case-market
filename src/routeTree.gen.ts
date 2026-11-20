@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CasesRouteImport } from './routes/cases'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as InventarRouteImport } from './routes/inventar'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const CasesRoute = CasesRouteImport.update({
   path: '/cases',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InventarRoute = InventarRouteImport.update({
   id: '/inventar',
   path: '/inventar',
@@ -32,30 +38,34 @@ const InventarRoute = InventarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cases': typeof CasesRoute
+  '/history': typeof HistoryRoute
   '/inventar': typeof InventarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cases': typeof CasesRoute
+  '/history': typeof HistoryRoute
   '/inventar': typeof InventarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cases': typeof CasesRoute
+  '/history': typeof HistoryRoute
   '/inventar': typeof InventarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cases' | '/inventar'
+  fullPaths: '/' | '/cases' | '/history' | '/inventar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cases' | '/inventar'
-  id: '__root__' | '/' | '/cases' | '/inventar'
+  to: '/' | '/cases' | '/history' | '/inventar'
+  id: '__root__' | '/' | '/cases' | '/history' | '/inventar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CasesRoute: typeof CasesRoute
+  HistoryRoute: typeof HistoryRoute
   InventarRoute: typeof InventarRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inventar': {
       id: '/inventar'
       path: '/inventar'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CasesRoute: CasesRoute,
+  HistoryRoute: HistoryRoute,
   InventarRoute: InventarRoute,
 }
 export const routeTree = rootRouteImport

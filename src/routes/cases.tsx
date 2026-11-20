@@ -9,6 +9,7 @@ import { CaseArt } from "@/components/mm2/CaseArt";
 import { Robux } from "@/components/mm2/Robux";
 import { SkinCard } from "@/components/mm2/SkinCard";
 import { useInventory } from "@/hooks/use-inventory";
+import { logHistory } from "@/hooks/use-history";
 import { useWallet } from "@/hooks/use-wallet";
 import { CASES, rollDrop, type CaseDef } from "@/lib/cases";
 import { useCaseReel } from "@/components/mm2/CaseReel";
@@ -84,6 +85,7 @@ function CaseOpener({ c, onBack }: { c: CaseDef; onBack: () => void }) {
     // Decide and save the drop first, so a refresh mid-animation keeps it in the inventory.
     const prize = rollDrop(c.drops, Math.random());
     inv.add(prize.id);
+    logHistory({ kind: "case", caseId: c.id, caseName: c.name, price: c.price, skinId: prize.id });
     setWon(null);
     await spin(prize);
     setWon(prize);

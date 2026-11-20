@@ -44,3 +44,33 @@ export function landingSpot(won: boolean, shown: number, r: number): number {
   const t = 0.04 + r * 0.92;
   return won ? t * shown : shown + t * (1 - shown);
 }
+
+/** Quick-pick buttons under the wheel. */
+export const QUICK_MULTIPLIERS = [2, 4, 8];
+export const QUICK_CHANCES = [0.35, 0.55, 0.75];
+
+/**
+ * Best target for a quick-pick button: the allowed skin whose multiplier (target / stake)
+ * or whose win chance is closest to the wanted one. Returns null when nothing fits.
+ */
+export function pickTarget<T extends { value: number }>(
+  stakeValue: number,
+  skins: readonly T[],
+  want: { multiplier: number } | { chance: number },
+): T | null {
+  if (stakeValue <= 0) return null;
+  let best: T | null = null;
+  let bestDiff = Infinity;
+  for (const s of skins) {
+    if (!isTargetAllowed(stakeValue, s.value)) continue;
+    const diff =
+      "multiplier" in want
+        ? Math.abs(s.value / stakeValue - want.multiplier)
+        : Math.abs(upgradeChance(stakeValue, s.value) - want.chance);
+    if (diff < bestDiff) {
+      best = s;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}

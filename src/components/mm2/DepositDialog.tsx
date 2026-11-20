@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Robux } from "./Robux";
 import { useWallet } from "@/hooks/use-wallet";
 import { usePromo } from "@/hooks/use-promo";
+import { logHistory } from "@/hooks/use-history";
 import { useLang } from "@/lib/i18n";
 import { COINS, MIN_DEPOSIT_EUR, coinsToSend, cryptoDepositRobux, type CoinId } from "@/lib/money";
 import { sfx } from "@/lib/sound";
@@ -114,7 +115,8 @@ function CryptoTab() {
   const pay = () => {
     if (!robux) return;
     wallet.earn(robux);
-    sfx.win();
+    logHistory({ kind: "deposit", coin: COINS.find((x) => x.id === coin)?.symbol ?? String(coin), amount: robux });
+    sfx.coin();
     toast.success(`${t("dep.success")}: +${fmt(robux)} Robux`);
   };
 
@@ -205,8 +207,9 @@ function PromoTab() {
     const res = promo.redeem(code);
     if (res.ok) {
       wallet.earn(res.amount);
+      logHistory({ kind: "promo", code: code.trim().toUpperCase(), amount: res.amount });
       setCode("");
-      sfx.win();
+      sfx.coin();
       toast.success(`${t("promo.ok")} +${fmt(res.amount)} Robux`);
     } else {
       toast.error(res.reason === "used" ? t("promo.used") : t("promo.unknown"));

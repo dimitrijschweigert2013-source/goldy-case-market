@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { isTargetAllowed, isWin, landingSpot, nextRotation, realChance, upgradeChance } from "./upgrade";
+import {
+  QUICK_CHANCES,
+  QUICK_MULTIPLIERS,
+  isTargetAllowed,
+  isWin,
+  landingSpot,
+  nextRotation,
+  pickTarget,
+  realChance,
+  upgradeChance,
+} from "./upgrade";
 
 describe("upgradeChance", () => {
   it("gives 90% of the value ratio", () => {
@@ -44,5 +54,25 @@ describe("spin", () => {
   });
   it("always spins forward", () => {
     expect(nextRotation(800, 0.1)).toBeGreaterThan(800);
+  });
+});
+
+describe("quick-pick buttons", () => {
+  const skins = [50, 100, 190, 210, 400, 820, 1000].map((value) => ({ value }));
+  it("offers x2, x4, x8 and 35%, 55%, 75%", () => {
+    expect(QUICK_MULTIPLIERS).toEqual([2, 4, 8]);
+    expect(QUICK_CHANCES).toEqual([0.35, 0.55, 0.75]);
+  });
+  it("x2 picks the skin closest to twice the stake", () => {
+    expect(pickTarget(100, skins, { multiplier: 2 })?.value).toBe(190);
+    expect(pickTarget(100, skins, { multiplier: 8 })?.value).toBe(820);
+  });
+  it("a chance button picks the skin whose chance is closest", () => {
+    // stake 100: 190 → 47.4%, 210 → 42.9%, 400 → 22.5%
+    expect(pickTarget(100, skins, { chance: 0.35 })?.value).toBe(210);
+  });
+  it("never picks a skin worth less than the stake, and nothing without a stake", () => {
+    expect(pickTarget(100, skins, { multiplier: 0.5 })?.value).toBeGreaterThan(100);
+    expect(pickTarget(0, skins, { multiplier: 2 })).toBeNull();
   });
 });

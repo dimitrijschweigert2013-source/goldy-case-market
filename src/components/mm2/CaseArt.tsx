@@ -2,12 +2,12 @@ import type { CaseDef } from "@/lib/cases";
 import { cn } from "@/lib/utils";
 
 const POSES = [
-  { left: "50%", bottom: "46%", size: "46%", r: "0deg", delay: "0s", z: 3 },
-  { left: "27%", bottom: "42%", size: "38%", r: "-24deg", delay: "0.4s", z: 2 },
-  { left: "73%", bottom: "42%", size: "38%", r: "24deg", delay: "0.8s", z: 2 },
+  { left: "50%", bottom: "40%", size: "50%", r: "20deg", delay: "0s", z: 3 },
+  { left: "26%", bottom: "38%", size: "40%", r: "-20deg", delay: "0.4s", z: 2 },
+  { left: "74%", bottom: "38%", size: "40%", r: "20deg", delay: "0.8s", z: 2 },
 ];
 
-/** Open box with glowing rays and its top 3 skins peeking out of it. */
+/** Open box with glowing rays and its top 3 skins floating above it, tilted and fully visible. */
 export function CaseArt({ c, className }: { c: CaseDef; className?: string }) {
   const top = c.drops.slice(0, 3).map((d) => d.skin);
   return (
@@ -16,7 +16,7 @@ export function CaseArt({ c, className }: { c: CaseDef; className?: string }) {
       <div className="case-glow absolute inset-[18%] rounded-full blur-xl" />
       {/* back of the box */}
       <img src={c.image} alt={c.name} className="absolute inset-[12%] h-[76%] w-[76%] object-contain" />
-      {/* skins coming out */}
+      {/* skins floating out, never cut off */}
       {top.map((s, i) => {
         const p = POSES[i] ?? POSES[0]!;
         return (
@@ -37,14 +37,6 @@ export function CaseArt({ c, className }: { c: CaseDef; className?: string }) {
           />
         );
       })}
-      {/* front of the box covers the skins' handles */}
-      <img
-        src={c.image}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-[12%] z-10 h-[76%] w-[76%] object-contain"
-        style={{ clipPath: "inset(47% 0 0 0)" }}
-      />
       {[18, 38, 62, 82].map((x, i) => (
         <span
           key={x}
